@@ -1,5 +1,5 @@
-#Version 1.0 create by Vassia Bonandrini
-#Last release : 26/09/2019
+#Version 2.0 create by Vassia Bonandrini
+#Last release : 12/12/2019
 
 import json
 import urllib.request
@@ -8,10 +8,14 @@ import time
 import tweepy
 import requests
 import os
+from selenium import webdriver
+from selenium.webdriver.chrome.options import *
+from selenium.webdriver.common.keys import Keys
+#import autoit for windows
+import pyautogui
 
-starttime=time.time()
 while(True):	
-	
+	starttime=time.time()
 	count =50
 	API_KEY = ''
 	cx=''
@@ -21,17 +25,23 @@ while(True):
 	contenuP=""
 	page=""
 	PageP=1
-	imageSearch=("totoro%20Wallpaper")
+	imageSearch=("Ghibli%20Wallpaper")
 	num=1
 	LINK=""
 	PHOTO=""
 	NOM_VID=""
+	waittime=3600.0*24
+	driverpth = "/usr/lib/chromium-browser/chromedriver"
+	#photopath = ["Desktop","TotoroXLofi","avatar.jpg"] for windows
+	
+	user_insta=''
+	passwd_insta=''
 
 	OAUTH_TOKEN = ""
 	OAUTH_SECRET = ""
 	CONSUMER_KEY = ""
 	CONSUMER_SECRET = ""
-	TWITTER_HANDLE = ""
+	TWITTER_HANDLE = "Totoro_X_Lofi"
 
 	auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
 	auth.set_access_token(OAUTH_TOKEN,OAUTH_SECRET)
@@ -44,7 +54,7 @@ while(True):
 	except:
 		print("Error during authentication")
 
-	##photos
+	##download photos
 
 	file2=open("photos.txt","r")
 	try:
@@ -86,11 +96,11 @@ while(True):
 			PageP=PageP+1
 			print("changement de page, résultat de "+str(PageP)+" à "+str(PageP+1)+" !\n")
 	if(PHOTO==""):
-		print("Le programme se ferme, en attende du changement des mots clés")
+		print("Le programme se ferme, en attente du changement des mots clés")
 		break
 
 
-	##lien YT
+	##Youtube link
 
 	file=open("liens.txt","r")
 	try:
@@ -123,7 +133,93 @@ while(True):
 			continue
 		break
 		
-	api.update_with_media(PHOTO,NOM_VID+" "+LINK)
+	#post on twitter
+	
+	api.update_with_media(PHOTO,NOM_VID+" #lofi #study #chill #totoro #Ghibli "+LINK)
 	print("Dernier tweet posté sur mon compte:\n"+api.user_timeline(id=1173918448855990272,count=1)[0].text)
+	
+	#post on instagram
+	
+	options = Options()
+	options.add_argument("--log-level=3")
+	options.add_argument("--silent")
+	#options.add_argument("--headless")
+	options.add_argument("--no-sandbox")
+	options.add_argument("--disable-logging")
+	options.add_argument("--mute-audio")
+	#mobile_emulation = {"deviceName": "Nexus 5"}
+	#options.add_experimental_option("mobileEmulation", mobile_emulation)
+	options.add_argument('--user-agent=Mozilla/5.0 (iPhone; CPU iPhone OS 10_3 like Mac OS X) AppleWebKit/602.1.50 (KHTML, like Gecko) CriOS/56.0.2924.75 Mobile/14E5239e Safari/602.1')
+	driver = webdriver.Chrome(executable_path=driverpth,options=options)
+	driver.get("https://www.instagram.com/accounts/login/?hl=fr")
+	time.sleep(3)
+	driver.find_element_by_xpath("//*[@id='react-root']/section/main/article/div/div/div/form/div[4]/div/label/input").send_keys(user_insta)
+	time.sleep(0.5)
+	driver.find_element_by_xpath("//*[@id='react-root']/section/main/article/div/div/div/form/div[5]/div/label/input").send_keys(passwd_insta)
+	time.sleep(0.5)
+	driver.find_element_by_xpath("//*[@id='react-root']/section/main/article/div/div/div/form/div[7]/button/div").click()
+	while 1:
+		time.sleep(1)
+		try:
+			driver.find_element_by_xpath("//*[@id='react-root']/section/main/div/button").click()
+			break
+		except:
+			pass
+	while 1:
+		time.sleep(1)
+		try:
+			driver.find_element_by_xpath("//button[contains(text(),'Annuler')]").click()
+			break
+		except:
+			pass
+		#depends if you have the window for notification when you open chrome
+	# while 1:
+		# time.sleep(1)
+		# try:
+			# driver.find_element_by_xpath("//button[contains(text(),'Plus tard')]").click()
+			# break
+		# except:
+			# pass
+
+	driver.find_element_by_xpath("//div[@role='menuitem']").click()
+	time.sleep(2)
+	pyautogui.press('enter')
+	time.sleep(2)
+	pyautogui.press('enter')
+	time.sleep(2)
+	pyautogui.press('enter')
+	time.sleep(5)
+
+	#Works only in windows
+	# autoit.win_active("Ouvrir") #open can change by your os language if not open change that
+	# time.sleep(2)
+	# autoit.control_send("Ouvrir", "Edit1", photopath[0])
+	# time.sleep(1.5)
+	# autoit.control_send("Ouvrir", "Edit1", "{ENTER}")
+	# time.sleep(1.5)
+	# autoit.control_send("Ouvrir", "Edit1", photopath[1])
+	# time.sleep(1.5)
+	# autoit.control_send("Ouvrir", "Edit1", "{ENTER}")
+	# time.sleep(1.5)
+	# autoit.control_send("Ouvrir", "Edit1", photopath[2])
+	# time.sleep(1.5)
+	# autoit.control_send("Ouvrir", "Edit1", "{ENTER}")
+	#time.sleep(2)
+
+
+	driver.find_element_by_xpath("//*[@id='react-root']/section/div[1]/header/div/div[2]/button").click()
+	time.sleep(5)
+	pyautogui.moveTo(200,240)
+	time.sleep(1)
+	pyautogui.click()
+	time.sleep(1)
+	pyautogui.typewrite(NOM_VID+" #lofi #study #chill #totoro #Ghibli "+LINK)
+	time.sleep(1)
+	#driver.find_element_by_xpath("//*[@id='react-root']/section/div[2]/section[1]/div[1]/textarea").send_keys(phototext)
+	time.sleep(5)
+	driver.find_element_by_xpath("//button[contains(text(),'Partager')]").click()
+	time.sleep(5)
+	driver.close()
+		
 	os.remove(PHOTO)
-	time.sleep(3600.0 - ((time.time() - starttime) % 3600.0))
+	time.sleep(waittime- ((time.time() - starttime) % waittime))

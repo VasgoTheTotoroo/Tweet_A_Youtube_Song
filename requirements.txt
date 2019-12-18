@@ -1,2 +1,5 @@
 requests
 tweepy
+instapy_cli
+pyautogui
+selenium
