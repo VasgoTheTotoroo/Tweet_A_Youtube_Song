@@ -1,106 +1,38 @@
-#Version 2.0 create by Vassia Bonandrini
-#Last release : 12/12/2019
+#Version 3.0 create by Vassia Bonandrini
+#Last release : 07/04/2019
 
 import json
 import urllib.request
-import random
 import time
-import tweepy
 import requests
 import os
-from selenium import webdriver
-from selenium.webdriver.chrome.options import *
-from selenium.webdriver.common.keys import Keys
-#import autoit for windows
-import pyautogui
+from pytube import YouTube
+
+#import for twitter
+import sys
+from requests_oauthlib import OAuth1
+
+count =50
+API_KEY = ''
+searchTerm="lofi"
+waittime=3600.0*24
+time_video = 0.49 #in secondes
+
+OAUTH_TOKEN = ""
+OAUTH_SECRET = ""
+CONSUMER_KEY = ""
+CONSUMER_SECRET = ""
 
 while(True):	
 	starttime=time.time()
-	count =50
-	API_KEY = ''
-	cx=''
-	searchTerm="lofi"
 	videoId=""
 	contenu=""
-	contenuP=""
 	page=""
-	PageP=1
-	imageSearch=("Ghibli%20Wallpaper")
-	num=1
 	LINK=""
-	PHOTO=""
 	NOM_VID=""
-	waittime=3600.0*24
-	driverpth = "/usr/lib/chromium-browser/chromedriver"
-	#photopath = ["Desktop","TotoroXLofi","avatar.jpg"] for windows
-	
-	user_insta=''
-	passwd_insta=''
 
-	OAUTH_TOKEN = ""
-	OAUTH_SECRET = ""
-	CONSUMER_KEY = ""
-	CONSUMER_SECRET = ""
-	TWITTER_HANDLE = "Totoro_X_Lofi"
-
-	auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
-	auth.set_access_token(OAUTH_TOKEN,OAUTH_SECRET)
-
-	api=tweepy.API(auth)
-
-	try:
-		api.verify_credentials()
-		print("Authentication OK")
-	except:
-		print("Error during authentication")
-
-	##download photos
-
-	file2=open("photos.txt","r")
-	try:
-		contenuP=file2.read()
-	except:
-		print("le fichier est vide")
-	file2.close()
-
-
-	while(PHOTO==""):
-		if(PageP>100):
-			print("Tu as déjà dl toutes les photos !")
-			break
-		
-		urlPic="https://www.googleapis.com/customsearch/v1?key={}&cx={}&q={}&searchType=image&num={}&start={}&imgSize=large".format(API_KEY,cx,imageSearch,num,PageP)
-		webURLPic=urllib.request.urlopen(urlPic)
-		dataPic=webURLPic.read()
-		encodingPic=webURLPic.info().get_content_charset('utf-8')
-		resultsPic=json.loads(dataPic.decode(encodingPic))
-		for data in resultsPic['items']:
-			name=data['link'][-15:]
-			if "/" in name:
-				name=name.replace("/","_")
-			if(name not in contenuP):
-				print(data['link'])
-				if (".jpg" not in name) and (".gif" not in name) and (".png" not in name) and (".jpeg" not in name):
-					PHOTO=name+".jpg"
-				else:
-					PHOTO=name
-				img_data = requests.get(data['link']).content
-				with open(PHOTO, 'wb') as handler:
-					handler.write(img_data)
-				file=open("photos.txt","a")
-				file.write(PHOTO+"\n")
-				file.close()
-		if PHOTO!="":
-			break
-		else:
-			PageP=PageP+1
-			print("changement de page, résultat de "+str(PageP)+" à "+str(PageP+1)+" !\n")
-	if(PHOTO==""):
-		print("Le programme se ferme, en attente du changement des mots clés")
-		break
-
-
-	##Youtube link
+	#get Youtube link
+	print("-------------SEARCH YOUTUBE LINK-------------\n")
 
 	file=open("liens.txt","r")
 	try:
@@ -108,7 +40,7 @@ while(True):
 	except:
 		print("le fichier est vide")
 	file.close()
-
+	
 	while(True):
 
 		urlData = "https://www.googleapis.com/youtube/v3/search?key={}&maxResults={}&part=snippet&type=video&q={}&pageToken={}".format(API_KEY,count,searchTerm,page)
@@ -122,6 +54,10 @@ while(True):
 			videoId = (data['id']['videoId'])
 			if ((videoId not in contenu) and (data['snippet']['liveBroadcastContent']=='none')):
 				LINK="https://www.youtube.com/watch?v="+videoId
+				try:
+					yt=YouTube(LINK)
+				except:
+					continue
 				NOM_VID=data['snippet']['title']
 				print(LINK)
 				file=open("liens.txt","a")
@@ -132,94 +68,169 @@ while(True):
 			print("changement de page !\n")
 			continue
 		break
-		
+
+	print("-------------DOWNLOAD VIDEO-------------\n")
+	t=yt.streams.filter(subtype='mp4')
+	t[0].download(filename='video')
+
+	print("-------------CUT VIDEO-------------\n")
+	from moviepy.editor import *
+
+	clip=VideoFileClip("video.mp4").subclip(0,(time_video,0))
+	clip.write_videofile("temp.mp4",audio_codec='aac')
+	clip.close()
+
+	#os.remove("video.mp4")
 	#post on twitter
+	print("-------------Post on Twitter-------------\n")
 	
-	api.update_with_media(PHOTO,NOM_VID+" #lofi #study #chill #totoro #Ghibli "+LINK)
-	print("Dernier tweet posté sur mon compte:\n"+api.user_timeline(id=1173918448855990272,count=1)[0].text)
-	
-	#post on instagram
-	
-	options = Options()
-	options.add_argument("--log-level=3")
-	options.add_argument("--silent")
-	#options.add_argument("--headless")
-	options.add_argument("--no-sandbox")
-	options.add_argument("--disable-logging")
-	options.add_argument("--mute-audio")
-	#mobile_emulation = {"deviceName": "Nexus 5"}
-	#options.add_experimental_option("mobileEmulation", mobile_emulation)
-	options.add_argument('--user-agent=Mozilla/5.0 (iPhone; CPU iPhone OS 10_3 like Mac OS X) AppleWebKit/602.1.50 (KHTML, like Gecko) CriOS/56.0.2924.75 Mobile/14E5239e Safari/602.1')
-	driver = webdriver.Chrome(executable_path=driverpth,options=options)
-	driver.get("https://www.instagram.com/accounts/login/?hl=fr")
-	time.sleep(3)
-	driver.find_element_by_xpath("//*[@id='react-root']/section/main/article/div/div/div/form/div[4]/div/label/input").send_keys(user_insta)
-	time.sleep(0.5)
-	driver.find_element_by_xpath("//*[@id='react-root']/section/main/article/div/div/div/form/div[5]/div/label/input").send_keys(passwd_insta)
-	time.sleep(0.5)
-	driver.find_element_by_xpath("//*[@id='react-root']/section/main/article/div/div/div/form/div[7]/button/div").click()
-	while 1:
-		time.sleep(1)
-		try:
-			driver.find_element_by_xpath("//*[@id='react-root']/section/main/div/button").click()
-			break
-		except:
-			pass
-	while 1:
-		time.sleep(1)
-		try:
-			driver.find_element_by_xpath("//button[contains(text(),'Annuler')]").click()
-			break
-		except:
-			pass
-		#depends if you have the window for notification when you open chrome
-	# while 1:
-		# time.sleep(1)
-		# try:
-			# driver.find_element_by_xpath("//button[contains(text(),'Plus tard')]").click()
-			# break
-		# except:
-			# pass
+	NOM_VID=NOM_VID+" #lofi #study #chill "+LINK
+	MEDIA_ENDPOINT_URL = 'https://upload.twitter.com/1.1/media/upload.json'
+	POST_TWEET_URL = 'https://api.twitter.com/1.1/statuses/update.json'
 
-	driver.find_element_by_xpath("//div[@role='menuitem']").click()
-	time.sleep(2)
-	pyautogui.press('enter')
-	time.sleep(2)
-	pyautogui.press('enter')
-	time.sleep(2)
-	pyautogui.press('enter')
-	time.sleep(5)
+	oauth = OAuth1(CONSUMER_KEY,
+	  client_secret=CONSUMER_SECRET,
+	  resource_owner_key=OAUTH_TOKEN,
+	  resource_owner_secret=OAUTH_SECRET)
 
-	#Works only in windows
-	# autoit.win_active("Ouvrir") #open can change by your os language if not open change that
-	# time.sleep(2)
-	# autoit.control_send("Ouvrir", "Edit1", photopath[0])
-	# time.sleep(1.5)
-	# autoit.control_send("Ouvrir", "Edit1", "{ENTER}")
-	# time.sleep(1.5)
-	# autoit.control_send("Ouvrir", "Edit1", photopath[1])
-	# time.sleep(1.5)
-	# autoit.control_send("Ouvrir", "Edit1", "{ENTER}")
-	# time.sleep(1.5)
-	# autoit.control_send("Ouvrir", "Edit1", photopath[2])
-	# time.sleep(1.5)
-	# autoit.control_send("Ouvrir", "Edit1", "{ENTER}")
-	#time.sleep(2)
+	class VideoTweet(object):
+		def __init__(self, file_name):
+			'''
+			Defines video tweet properties
+			https://github.com/twitterdev/large-video-upload-python/blob/master/async-upload.py
+			'''
+			self.video_filename = file_name
+			self.total_bytes = os.path.getsize(self.video_filename)
+			self.media_id = None
+			self.processing_info = None
+
+		def upload_init(self):
+			'''
+			Initializes Upload
+			'''
+			print('INIT')
+
+			request_data = {
+			  'command': 'INIT',
+			  'media_type': 'video/mp4',
+			  'total_bytes': self.total_bytes,
+			  'media_category': 'tweet_video'
+			}
+
+			req = requests.post(url=MEDIA_ENDPOINT_URL, data=request_data, auth=oauth)
+			media_id = req.json()['media_id']
+
+			self.media_id = media_id
+
+			print('Media ID: %s' % str(media_id))
 
 
-	driver.find_element_by_xpath("//*[@id='react-root']/section/div[1]/header/div/div[2]/button").click()
-	time.sleep(5)
-	pyautogui.moveTo(200,240)
-	time.sleep(1)
-	pyautogui.click()
-	time.sleep(1)
-	pyautogui.typewrite(NOM_VID+" #lofi #study #chill #totoro #Ghibli "+LINK)
-	time.sleep(1)
-	#driver.find_element_by_xpath("//*[@id='react-root']/section/div[2]/section[1]/div[1]/textarea").send_keys(phototext)
-	time.sleep(5)
-	driver.find_element_by_xpath("//button[contains(text(),'Partager')]").click()
-	time.sleep(5)
-	driver.close()
+		def upload_append(self):
+			'''
+			Uploads media in chunks and appends to chunks uploaded
+			'''
+			segment_id = 0
+			bytes_sent = 0
+			file = open(self.video_filename, 'rb')
+
+			while bytes_sent < self.total_bytes:
+			  chunk = file.read(4*1024*1024)
+			  
+			  print('APPEND')
+
+			  request_data = {
+				'command': 'APPEND',
+				'media_id': self.media_id,
+				'segment_index': segment_id
+			  }
+
+			  files = {
+				'media':chunk
+			  }
+
+			  req = requests.post(url=MEDIA_ENDPOINT_URL, data=request_data, files=files, auth=oauth)
+
+			  if req.status_code < 200 or req.status_code > 299:
+			    print(req.status_code)
+			    print(req.text)
+			    sys.exit(0)
+
+			  segment_id = segment_id + 1
+			  bytes_sent = file.tell()
+
+			  print('%s of %s bytes uploaded' % (str(bytes_sent), str(self.total_bytes)))
+
+			print('Upload chunks complete.')
+
+
+		def upload_finalize(self):
+			'''
+			Finalizes uploads and starts video processing
+			'''
+			print('FINALIZE')
+
+			request_data = {
+			  'command': 'FINALIZE',
+			  'media_id': self.media_id
+			}
+
+			req = requests.post(url=MEDIA_ENDPOINT_URL, data=request_data, auth=oauth)
+
+			self.processing_info = req.json().get('processing_info', None)
+			self.check_status()
+
+		def check_status(self):
+			'''
+			Checks video processing status
+			'''
+			if self.processing_info is None:
+			  return
+
+			state = self.processing_info['state']
+
+			print('Media processing status is %s ' % state)
+
+			if state == u'succeeded':
+			  return
+
+			if state == u'failed':
+			  sys.exit(0)
+
+			check_after_secs = self.processing_info['check_after_secs']
+			
+			print('Checking after %s seconds' % str(check_after_secs))
+			time.sleep(check_after_secs)
+
+			print('STATUS')
+
+			request_params = {
+			  'command': 'STATUS',
+			  'media_id': self.media_id
+			}
+
+			req = requests.get(url=MEDIA_ENDPOINT_URL, params=request_params, auth=oauth)
+			
+			self.processing_info = req.json().get('processing_info', None)
+			self.check_status()
+
+
+		def tweet(self):
+			'''
+			Publishes Tweet with attached video
+			'''
+			request_data = {
+			  'status': NOM_VID,
+			  'media_ids': self.media_id
+			}
+
+			req = requests.post(url=POST_TWEET_URL, data=request_data, auth=oauth)
+
+	videoTweet = VideoTweet("temp.mp4")
+	videoTweet.upload_init()
+	videoTweet.upload_append()
+	videoTweet.upload_finalize()
+	videoTweet.tweet()
 		
-	os.remove(PHOTO)
+	os.remove("temp.mp4")
+	os.remove("video.mp4")
 	time.sleep(waittime- ((time.time() - starttime) % waittime))

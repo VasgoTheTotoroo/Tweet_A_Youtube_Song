@@ -1,5 +1,2 @@
 requests
-tweepy
-instapy_cli
-pyautogui
-selenium
+pytube3
