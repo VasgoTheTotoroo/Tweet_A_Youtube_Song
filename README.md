@@ -7,3 +7,8 @@ that is a LoFi song (seach term can also change).
 
 Post on instagram at the same time with hastag.
 Work on Windows and Linux but differently depends if we use autogui or autoit.
+
+# Update 07/04/2020 
+
+Disable instagram.
+now, post videos on twitter !
