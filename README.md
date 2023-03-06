@@ -1,3 +1,3 @@
 # Totoro X Lofi Bot
 
-A twitter bot that uses Google and Twitter APIs to tweet a random lofi song.
+A program to tweet a youtube lofi song using Twitter and Google APIs.
