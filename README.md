@@ -1,3 +1,3 @@
-# Totoro X Lofi Bot
+# Tweet A Youtube Song
 
-A program to tweet a youtube lofi song using Twitter and Google APIs.
+A program to tweet a youtube song using Twitter and Google APIs.
