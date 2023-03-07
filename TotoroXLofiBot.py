@@ -9,7 +9,7 @@ from VideoTweet import VideoTweet
 from moviepy.editor import *
 
 MAX_RESULT = 50
-SEARCH_TERM="lofi"
+SEARCH_TERM = "lofi"
 
 BEGIN_VIDEO_TIMECODE = 30 #in seconds
 END_VIDEO_TIMECODE = 60
