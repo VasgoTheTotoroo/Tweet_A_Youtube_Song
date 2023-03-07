@@ -1,2 +1,4 @@
 requests
 pytube3
+requests_oauthlib
+moviepy
